@@ -1,0 +1,7 @@
+com\revature\ormnl\Driver.class
+com\revature\ormnl\model\UserAccount.class
+com\revature\ormnl\model\GenericObject.class
+com\revature\ormnl\util\ClassObjectInspector.class
+com\revature\ormnl\util\ConnectionSingleton.class
+com\revature\ormnl\persistance\GenericDao.class
+com\revature\ormnl\service\ObjectService.class
