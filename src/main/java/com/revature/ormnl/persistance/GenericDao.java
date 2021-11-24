@@ -137,9 +137,9 @@ public class GenericDao {
         StringBuilder sqlUpdateById = new StringBuilder("update " + clazzSimpleName + " set ");
         for (Map.Entry<String,String> entry : objectMap.entrySet()) {
             sqlUpdateById.append(entry.getKey());
-            sqlUpdateById.append(" = ");
+            sqlUpdateById.append(" = '");
             sqlUpdateById.append(entry.getValue());
-            sqlUpdateById.append(", ");
+            sqlUpdateById.append("', ");
         }
         sqlUpdateById.deleteCharAt(sqlUpdateById.lastIndexOf(","));
         sqlUpdateById.append("where pid = "); sqlUpdateById.append(pid);
@@ -203,7 +203,7 @@ public class GenericDao {
             for (String field : fieldNames) {
                 fieldContents.put(field, rs.getString(field));
             }
-            objectArray.add(Integer.parseInt(fieldContents.get("pid"))-1,fieldContents);
+            objectArray.add(fieldContents);
         }
         return objectArray;
 
