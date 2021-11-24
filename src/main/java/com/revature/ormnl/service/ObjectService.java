@@ -56,10 +56,12 @@ public class ObjectService {
         return dao.updateById(objectMap, clazz.getSimpleName(), pid);
     }
 
-    public boolean delete(String clazzSimpleName, int pid) {
+    public boolean delete(String clazzSimpleName, int pid) throws ClassNotFoundException {
+        if (!dao.doesClassExistInDatabase(clazzSimpleName)) throw new ClassNotFoundException();
         return dao.deleteById(clazzSimpleName, pid);
     }
-    public boolean delete(String clazzSimpleName) {
+    public boolean delete(String clazzSimpleName) throws ClassNotFoundException {
+        if (!dao.doesClassExistInDatabase(clazzSimpleName)) throw new ClassNotFoundException();
         if (DeleteNotTruncate) return dao.deleteTable(clazzSimpleName); else return dao.deleteAllFromTable(clazzSimpleName);
     }
 

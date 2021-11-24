@@ -156,7 +156,7 @@ public class GenericDao {
     }
 
     public boolean deleteById (String clazzSimpleName, int pid) {
-        String sqlDelete = "delete * from " + clazzSimpleName + " where pid=" + pid;
+        String sqlDelete = "delete from " + clazzSimpleName + " where pid=" + pid;
         try (Connection conn = ConnectionSingleton.getInstance()) {
             PreparedStatement stmtDelete = conn.prepareStatement(sqlDelete);
             int i = stmtDelete.executeUpdate();
