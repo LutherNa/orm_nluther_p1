@@ -11,6 +11,7 @@ import java.util.HashMap;
 public class ObjectService {
 
     private final GenericDao dao = new GenericDao();
+    private boolean DeleteNotTruncate = false;
 
     public boolean add(Object o) {
         return dao.create(o);
@@ -48,6 +49,30 @@ public class ObjectService {
         return dao.getAllByClass(clazzSimpleName);
     }
 
+    public boolean update(HashMap<String,String> objectMap, String clazzSimpleName, int pid) {
+        return dao.updateById(objectMap, clazzSimpleName, pid);
+    }
+    public boolean update(HashMap<String,String> objectMap, Class<?> clazz, int pid) {
+        return dao.updateById(objectMap, clazz.getSimpleName(), pid);
+    }
+
+    public boolean delete(String clazzSimpleName, int pid) {
+        return dao.deleteById(clazzSimpleName, pid);
+    }
+    public boolean delete(String clazzSimpleName) {
+        if (DeleteNotTruncate) return dao.deleteTable(clazzSimpleName); else return dao.deleteAllFromTable(clazzSimpleName);
+    }
+
+    public boolean toggleDeleteNotTruncate() {
+        if (DeleteNotTruncate) {
+            this.DeleteNotTruncate = false;
+            return false;
+        } else {
+            this.DeleteNotTruncate = true;
+            return true;
+        }
+    }
+
     private Class<?> setClass(String clazzName) {
         try {
             return Class.forName(clazzName);
@@ -77,19 +102,18 @@ public class ObjectService {
                 Object value;
                 Object[] values;
                 field.setAccessible(true);
-                System.out.println("result set contents: " + objectMap.get(field.toString()));
                 try {
                     if (field.getType().isArray()) {
-                        values = objectMap.get(field.toString()).substring(1, field.toString().length() - 1).split(", ");
+                        values = objectMap.get(field.getName().toLowerCase()).substring(1, field.getName().length() - 1).split(", ");
                         for (int k = 0; k < values.length; k++) {
                             values[k] = toPrimitiveIfPrimitive(field.getType(), values[k].toString());
                         }
                         field.set(o, values);
                     } else {
-                        value = toPrimitiveIfPrimitive(field.getType(), objectMap.get(field.toString()));
+                        value = toPrimitiveIfPrimitive(field.getType(), objectMap.get(field.getName().toLowerCase()));
                         field.set(o, value);
                     }
-                    System.out.println("set field contents: " + field.get(o));
+//                    System.out.println("set field contents: " + field.get(o));
                 } catch (IllegalAccessException e) {
                     e.printStackTrace();
                 }
@@ -99,16 +123,18 @@ public class ObjectService {
             return o;
     }
 
-    private static Object toPrimitiveIfPrimitive( Class<?> fieldClazz, String value ) {
-        System.out.println("Field Class " + fieldClazz + " Value: " + value);
-        if( Boolean.class == fieldClazz ) return Boolean.parseBoolean( value );
-        if( Byte.class == fieldClazz ) return Byte.parseByte( value );
-        if( Short.class == fieldClazz ) return Short.parseShort( value );
-        if( Integer.class == fieldClazz ) return Integer.parseInt( value );
-        if( Long.class == fieldClazz ) return Long.parseLong( value );
-        if( Float.class == fieldClazz ) return Float.parseFloat( value );
-        if( Double.class == fieldClazz ) return Double.parseDouble( value );
-        if( Character.class == fieldClazz ) return value.toString().charAt(0);
+    private static Object toPrimitiveIfPrimitive(Class<?> fieldClazz, String value ) {
+//        System.out.println("Field Class " + fieldClazz + " Value: " + value);
+        if(fieldClazz.isPrimitive()) {
+            if (fieldClazz.getTypeName().equals("bool")) return Boolean.parseBoolean(value);
+            if (fieldClazz.getTypeName().equals("byte")) return Byte.parseByte(value);
+            if (fieldClazz.getTypeName().equals("short")) return Short.parseShort(value);
+            if (fieldClazz.getTypeName().equals("int")) return Integer.parseInt(value);
+            if (fieldClazz.getTypeName().equals("long")) return Long.parseLong(value);
+            if (fieldClazz.getTypeName().equals("float")) return Float.parseFloat(value);
+            if (fieldClazz.getTypeName().equals("double")) return Double.parseDouble(value);
+            if (fieldClazz.getTypeName().equals("char")) return value.charAt(0);
+        }
         return value;
     }
 

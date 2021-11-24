@@ -96,17 +96,17 @@ public class GenericDao {
         return false;
     }
 
-    public HashMap<String,String> getByIndex(String clazzSimpleName, int index) {
+    public HashMap<String,String> getByIndex(String clazzSimpleName, int pid) {
         String sqlGetInfoSchema = "select * from information_schema.columns WHERE table_schema = '"
                 + properties.getProperty("schemaName") + "' AND table_name = '" + clazzSimpleName.toLowerCase() + "'";
-        String sqlGetAll = "select * from " + clazzSimpleName.toLowerCase() + " where 'pid' = " + index;
+        String sqlGetAll = "select * from " + clazzSimpleName.toLowerCase() + " where pid=" + pid;
         try (Connection conn = ConnectionSingleton.getInstance()) {
             PreparedStatement stmtGetInfoSchema = conn.prepareStatement(sqlGetInfoSchema);
             PreparedStatement stmtGetAll = conn.prepareStatement(sqlGetAll);
             ResultSet rsInfo = stmtGetInfoSchema.executeQuery();
             ResultSet rs = stmtGetAll.executeQuery();
             ArrayList<HashMap<String,String>> objectArray = fillObjectListFromResultSet(rsInfo, rs);
-            HashMap<String,String> object = objectArray.get(1);
+            HashMap<String,String> object = objectArray.get(0);
             rsInfo.close(); rs.close(); stmtGetInfoSchema.close(); stmtGetAll.close(); conn.close();
             return object;
         } catch (SQLException | NoSuchFieldException | IllegalAccessException | InstantiationException e) { // need to handle more gracefully
@@ -133,6 +133,64 @@ public class GenericDao {
         return null;
     }
 
+    public boolean updateById (HashMap<String,String> objectMap, String clazzSimpleName, int pid) {
+        StringBuilder sqlUpdateById = new StringBuilder("update " + clazzSimpleName + " set ");
+        for (Map.Entry<String,String> entry : objectMap.entrySet()) {
+            sqlUpdateById.append(entry.getKey());
+            sqlUpdateById.append(" = ");
+            sqlUpdateById.append(entry.getValue());
+            sqlUpdateById.append(", ");
+        }
+        sqlUpdateById.deleteCharAt(sqlUpdateById.lastIndexOf(","));
+        sqlUpdateById.append("where pid = "); sqlUpdateById.append(pid);
+        try (Connection conn = ConnectionSingleton.getInstance()) {
+            PreparedStatement stmtUpdateById = conn.prepareStatement(sqlUpdateById.toString());
+            int i = stmtUpdateById.executeUpdate();
+            stmtUpdateById.close();
+            conn.close();
+            return i == 1;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteById (String clazzSimpleName, int pid) {
+        String sqlDelete = "delete * from " + clazzSimpleName + " where pid=" + pid;
+        try (Connection conn = ConnectionSingleton.getInstance()) {
+            PreparedStatement stmtDelete = conn.prepareStatement(sqlDelete);
+            int i = stmtDelete.executeUpdate();
+            return (i > 0);
+        } catch (SQLException e) { // need to handle more gracefully
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteAllFromTable (String clazzSimpleName) {
+        String sqlDelete = "truncate table " + clazzSimpleName;
+        try (Connection conn = ConnectionSingleton.getInstance()) {
+            PreparedStatement stmtDelete = conn.prepareStatement(sqlDelete);
+            int i = stmtDelete.executeUpdate();
+            return (i > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean deleteTable (String clazzSimpleName) {
+        String sqlDelete = "drop table " + clazzSimpleName;
+        try (Connection conn = ConnectionSingleton.getInstance()) {
+            PreparedStatement stmtDelete = conn.prepareStatement(sqlDelete);
+            int i = stmtDelete.executeUpdate();
+            return (i > 0);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
     private ArrayList<HashMap<String,String>> fillObjectListFromResultSet(ResultSet rsInfo, ResultSet rs)
             throws SQLException, IllegalAccessException, InstantiationException, NoSuchFieldException {
         ArrayList<String> fieldNames = new ArrayList<>();
@@ -155,12 +213,10 @@ public class GenericDao {
         try (Connection conn = ConnectionSingleton.getInstance()) {
             PreparedStatement stmtTable = conn.prepareStatement("create table if not exists " + clazzName + " (pid serial primary key);");
             conn.setAutoCommit(false);
-            System.out.println(stmtTable);
             stmtTable.executeUpdate();
             stmtTable.close();
             for (String fieldName : objectMap.keySet()) {
                 PreparedStatement stmtColumn = conn.prepareStatement("alter table " + clazzName + " add column if not exists " + fieldName + " varchar;");
-                System.out.println(stmtColumn.toString());
                 stmtColumn.executeUpdate();
                 stmtColumn.close();
             }
@@ -177,12 +233,10 @@ public class GenericDao {
         try (Connection conn = ConnectionSingleton.getInstance()) {
             PreparedStatement stmtTable = conn.prepareStatement("create table if not exists " + clazzName + " (pid serial primary key);");
             conn.setAutoCommit(false);
-            System.out.println(stmtTable);
             stmtTable.executeUpdate();
             stmtTable.close();
             for (String fieldName : fieldNames) {
                 PreparedStatement stmtColumn = conn.prepareStatement("alter table " + clazzName + " add column if not exists " + fieldName + " varchar;");
-                System.out.println(stmtColumn.toString());
                 stmtColumn.executeUpdate();
                 stmtColumn.close();
             }

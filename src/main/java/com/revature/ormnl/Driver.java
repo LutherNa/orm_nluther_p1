@@ -1,5 +1,6 @@
 package com.revature.ormnl;
 
+import com.revature.ormnl.model.UserAccount;
 import com.revature.ormnl.service.ObjectService;
 import com.revature.ormnl.util.ClassObjectInspector;
 
@@ -29,5 +30,17 @@ public class Driver {
         for (HashMap<String,String> output : outputList) {
             output.forEach((key, value) -> System.out.println(key + ":" + value));
         }
+        UserAccount me = null;
+        try {
+            me = (UserAccount) objectService.getObject("com.revature.ormnl.model.UserAccount",1);
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+        System.out.println(
+                "Account Id: " + me.getUserId() + "\n" +
+                "Username: " + me.getUsername() + "\n" +
+                "Password: " + me.getPassword() + "\n" +
+                "First Name: " + me.getFirstName() + "\n" +
+                "Last Name: " + me.getLastName());
     }
 }
